@@ -25,7 +25,7 @@ def keep_alive():
     t.start()
 
 # --- CONFIGURATION ---
-TOKEN = os.environ.get('BOT_TOKEN')
+TOKEN = os.environ.get('8662822210:AAG0QlH6p5o4Ba-sXhw62wpl1fD0o_7RaZQ')
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
