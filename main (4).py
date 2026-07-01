@@ -462,7 +462,7 @@ def choose_srv(call):
     except Exception: pass
 
 # =====================================================================
-# RUN SERVER 01 ENGINE (WITH FIXED SPLITTING & FAILURE HANDLERS)
+# RUN SERVER 01 ENGINE (WITH FIXED CONNECTION ERROR HANDLER)
 # =====================================================================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("run_s1_"))
 def run_s1(call):
@@ -471,7 +471,6 @@ def run_s1(call):
     bot.answer_callback_query(call.id)
     
     try:
-        # Properly unpacks the 5-part pattern safely
         _, _, _, app_code, country_code = call.data.split("_")
     except Exception as e:
         logger.error(f"Callback split mismatch error on Server 1: {e}")
@@ -479,15 +478,15 @@ def run_s1(call):
 
     user_id = call.message.chat.id
     
-    # Stylish Font Stock Configuration
+    # Aapka exact stylish out-of-stock aur error text message
     error_text = (
         "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
         "_________________________________________\n"
-        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵ο 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
+        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵𝗼 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
         "🔄 𝐓𝐡𝐨𝐫𝐢 𝐃𝐞𝐞𝐫 𝐭𝐚𝐤 𝐇𝐮𝐦 𝐚𝐮𝐫 𝐍𝐮𝐦𝐛𝐞𝐫 𝐚𝐝𝐝 𝐤𝐚𝐫 𝐝𝐞 𝐆𝐚 \n\n"
-        "𝗔𝗻𝘆 𝗶𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
+        "𝗔𝗻𝘆 𝗜𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
         "__________________________________________\n"
-        "🩷 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐅𝐲𝐧𝐨𝐫 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 !"
+        "🩷 𝐓𝐡𝐚𝐧𝐤 𝐬𝐟𝐨𝐫  𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐅𝐲𝐧𝐨𝐫 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 !"
     )
     
     price_res = run_query("SELECT price_usd FROM service_countries WHERE service_code = ? AND country_code = ?", (app_code, country_code), is_select=True, fetch_all=False)
@@ -532,17 +531,17 @@ def run_s1(call):
             bot.edit_message_text(text, user_id, call.message.message_id, reply_markup=markup)
             threading.Thread(target=poll_s1, args=(user_id, call.message.message_id, activation_id, phone_number, app_name, cost)).start()
         
-        # ⚠️ PURANA REAL FLOW: Aggar HeroSMS se response out of stock / empty error aaye
         elif "NO_NUMBERS" in res_text or "NO_BALANCE" in res_text:
             bot.send_message(user_id, error_text)
         else:
-            bot.send_message(user_id, f"❌ System response error status: {res_text}")
+            # Kisi bhi aur unexpected API response par bhi yahi message jaye
+            bot.send_message(user_id, error_text)
             
     except Exception as e:
         logger.error(f"API Connection Error: {e}")
         try:
-            # 🔄 EXACT PURANI REQUIREMENT: Communication breakdowns par yahi specific line trigger hogi
-            bot.send_message(user_id, "❌ API communication failure occurred.")
+            # Ab agar communication failure (timeout/network issue) hoga, to yeh text trigger hoga
+            bot.send_message(user_id, error_text)
         except Exception:
             pass
 
