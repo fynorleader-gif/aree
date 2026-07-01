@@ -469,8 +469,22 @@ def run_s1(call):
     _, _, app_code, country_code = call.data.split("_")
     user_id = call.message.chat.id
     
+    # Aapka custom out-of-stock / error message string
+    error_text = (
+        "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
+        "_________________________________________\n"
+        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵𝗼 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
+        "🔄 𝐓𝐡𝐨𝐫𝐢 𝐃𝐞𝐞𝐫 𝐭𝐚𝐤 𝐇𝐮𝐦 𝐚𝐮𝐫 𝐍𝐮𝐦𝐛𝐞𝐫 𝐚𝐝𝐝 𝐤𝐚𝐫 𝐝𝐞 𝐆𝐚 \n\n"
+        "𝗔𝗻𝘆 𝗶𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
+        "__________________________________________\n"
+        "🩷 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐅𝐲𝐧𝐨𝐫 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 !"
+    )
+    
     price_res = run_query("SELECT price_usd FROM service_countries WHERE service_code = ? AND country_code = ?", (app_code, country_code), is_select=True, fetch_all=False)
-    if not price_res: return
+    if not price_res: 
+        bot.send_message(user_id, error_text)
+        return
+        
     cost = float(price_res[0])
     
     if not is_admin(user_id, call.from_user.username):
@@ -481,18 +495,11 @@ def run_s1(call):
             return
         
     api_res = run_query("SELECT api_code, name FROM services WHERE code = ?", (app_code,), is_select=True, fetch_all=False)
+    if not api_res:
+        bot.send_message(user_id, error_text)
+        return
+        
     api_service, app_name = api_res[0], api_res[1]
-    
-    # Aapka custom out-of-stock / error message string
-    error_text = (
-        "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
-        "_________________________________________\n"
-        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵𝗼 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
-        "🔄 𝐓𝐡𝐨𝐫𝐢 𝐃𝐞𝐞𝐫 𝐭𝐚𝐤 𝐇𝐮𝐦 𝐚𝐮𝐫 𝐍𝐮𝐦𝐛𝐞𝐫 𝐚𝐝𝐝 𝐤𝐚𝐫 𝐝𝐞 𝐆𝐚 \n\n"
-        "𝗔𝗻𝘆 𝗜𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
-        "__________________________________________\n"
-        "🩷 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐅𝐲𝐧𝐨𝐫 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 !"
-    )
     
     payload = {"api_key": HERO_SMS_API_KEY, "action": "getNumber", "service": api_service, "country": country_code}
     try:
@@ -515,12 +522,11 @@ def run_s1(call):
             bot.edit_message_text(text, user_id, call.message.message_id, reply_markup=markup)
             threading.Thread(target=poll_s1, args=(user_id, call.message.message_id, activation_id, phone_number, app_name, cost)).start()
         else: 
-            # Agar API response me NO_NUMBERS ya koi aur error code aaye
+            # HeroSMS agar NO_NUMBERS ya koi bhi error bhejega toh direct message chala jayega
             bot.send_message(user_id, error_text)
         
     except Exception as e:
         logger.error(f"API Error: {e}")
-        # Agar request fail ho jaye (Internet issue ya server down ho)
         try:
             bot.send_message(call.message.chat.id, error_text)
         except Exception:
