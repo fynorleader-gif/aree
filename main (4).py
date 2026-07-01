@@ -272,6 +272,10 @@ def handle_admin_panel_clicks(call):
         BOT_GLOBAL_STATUS = not BOT_GLOBAL_STATUS
         status_str = "ON" if BOT_GLOBAL_STATUS else "OFF"
         bot.send_message(uid, f"⚙️ Bot status globally updated to: *{status_str}*")
+    elif action == "hidesrv":
+        # New Step Handler for Hiding Servers
+        msg = bot.send_message(uid, "⌨️ *Kis Server ko HIDE/SHOW karna chahte hain?*\n\n👉🏻 Only Server 1 Hide karne ke liye: `1` likhein\n👉🏻 Only Server 2 Hide karne ke liye: `2` likhein\n👉🏻 Dono Servers wapas SHOW karne ke liye: `0` likhein")
+        bot.register_next_step_handler(msg, process_admin_hide_server)
     elif action == "alert":
         msg = bot.send_message(uid, "Enter global alert message text to broadcast:")
         bot.register_next_step_handler(msg, process_admin_broadcast_alert)
@@ -284,6 +288,20 @@ def handle_admin_panel_clicks(call):
         for item in hist:
             text += f"ID: {item[0]} | User: {item[1]} | {item[2]} | `{item[3]}`\n"
         bot.send_message(uid, text)
+
+# New Function to Save Configuration in DB
+def process_admin_hide_server(message):
+    if not is_admin(message.from_user.id, message.from_user.username): return
+    choice = message.text.strip()
+    
+    if choice in ['1', '2', '0']:
+        run_query("INSERT OR REPLACE INTO sys_config (key, value) VALUES ('hidden_server', ?)", (choice,))
+        if choice == '0':
+            bot.send_message(message.chat.id, "✅ All Servers are now *VISIBLE* to users.")
+        else:
+            bot.send_message(message.chat.id, f"✅ *Server {choice}* successfully *HIDDEN* from all regular users!")
+    else:
+        bot.send_message(message.chat.id, "❌ Invalid input. Please reply with `1`, `2`, or `0` only.")
 
 def process_admin_add_balance(message):
     try:
