@@ -439,6 +439,9 @@ def process_admin_edit_price(message, app_code):
         bot.send_message(message.chat.id, f"✅ Price updated for Service `{app_code}`, Country `{c_code.strip()}` -> ${p_usd} ({p_pkr} PKR)")
     except Exception: bot.send_message(message.chat.id, "❌ Error parsing updates layout structure.")
 
+
+        
+    cost = float(price_res[0])
 # =====================================================================
 # CHOOSE AND RUN ENGINES
 # =====================================================================
@@ -450,30 +453,38 @@ def choose_srv(call):
     _, _, app_code, country_code = call.data.split("_")
     text = "🧘🏻 𝐒𝐞𝐥𝐞𝐜𝐭 𝐒𝐞𝐫𝐯𝐞𝐫 \n━━━━━━━━━━━━━━━━━━━━━━"
     markup = InlineKeyboardMarkup(row_width=2)
+    # Callback data structured safely with srv1/srv2 indicators
     markup.add(
-        InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_{app_code}_{country_code}"),
-        InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_{app_code}_{country_code}")
+        InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_srv1_{app_code}_{country_code}"),
+        InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_srv2_{app_code}_{country_code}")
     )
     markup.add(InlineKeyboardButton("🔙 Back", callback_data=f"usr_view_app_{app_code}"))
     try: bot.edit_message_text(text, uid, call.message.message_id, reply_markup=markup)
     except Exception: pass
 
 # =====================================================================
-# CHOOSE AND RUN ENGINES (REPLACED RUN_S1 FUNCTION)
+# CHOOSE AND RUN ENGINES (FIXED VARIABLE UNPACKING & STOCK CHECK)
 # =====================================================================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("run_s1_"))
 def run_s1(call):
     uid = call.message.chat.id
     if not check_status(call.from_user.id, uid): return
     bot.answer_callback_query(call.id)
-    _, _, app_code, country_code = call.data.split("_")
+    
+    try:
+        # Handles the aligned 5-part splitting pattern cleanly
+        _, _, _, app_code, country_code = call.data.split("_")
+    except Exception as e:
+        logger.error(f"Callback split mismatch error on Server 1: {e}")
+        return
+
     user_id = call.message.chat.id
     
-    # Aapka custom out-of-stock / error message string
+    # Aapka custom out-of-stock / error message string (Stylish Fonts Preserved)
     error_text = (
         "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
         "_________________________________________\n"
-        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵𝗼 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
+        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵ο 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
         "🔄 𝐓𝐡𝐨𝐫𝐢 𝐃𝐞𝐞𝐫 𝐭𝐚𝐤 𝐇𝐮𝐦 𝐚𝐮𝐫 𝐍𝐮𝐦𝐛𝐞𝐫 𝐚𝐝𝐝 𝐤𝐚𝐫 𝐝𝐞 𝐆𝐚 \n\n"
         "𝗔𝗻𝘆 𝗶𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
         "__________________________________________\n"
@@ -522,7 +533,6 @@ def run_s1(call):
             bot.edit_message_text(text, user_id, call.message.message_id, reply_markup=markup)
             threading.Thread(target=poll_s1, args=(user_id, call.message.message_id, activation_id, phone_number, app_name, cost)).start()
         else: 
-            # HeroSMS agar NO_NUMBERS ya koi bhi error bhejega toh direct message chala jayega
             bot.send_message(user_id, error_text)
         
     except Exception as e:
@@ -548,16 +558,15 @@ def poll_s1(user_id, message_id, activation_id, phone_number, app_name, cost):
                     run_query("UPDATE users SET balance = MAX(0.0, balance - ?), total_spent = total_spent + ? WHERE user_id = ?", (cost, cost, user_id))
                 
                 run_query("INSERT INTO history (user_id, service, number, otp, server) VALUES (?, ?, ?, ?, 'Server 1')", (user_id, app_name, phone_number, otp_code))
-                text = f"💪🏻 𝐎𝐓𝐏 𝐑𝐞𝐜𝐞𝐢𝐯𝐞𝐝\n\nService : {app_name}\n━━━━━━━━━━━━━━━━━━━━━━\n🧾 𝐍𝐮𝐦𝐛𝐞𝐫\n\n`+{phone_number}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔐 OTP\n\n`{otp_code}`"
+                text = f"💪🏻 𝐎𝐓𝐏 𝐑e𝐜𝐞𝐢𝐯e𝐝\n\nService : {app_name}\n━━━━━━━━━━━━━━━━━━━━━━\n🧾 𝐍𝐮𝐦𝐛𝐞𝐫\n\n`+{phone_number}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔐 OTP\n\n`{otp_code}`"
                 markup = InlineKeyboardMarkup(row_width=1)
                 markup.add(
-                    InlineKeyboardButton("📋 Copy OTP", copy_text=CopyTextButton(text=otp_code)), # ✨ Direct Copy Feature
+                    InlineKeyboardButton("📋 Copy OTP", copy_text=CopyTextButton(text=otp_code)), 
                     InlineKeyboardButton("🔄 Get Again OTP", callback_data=f"again_s1_{activation_id}")
                 )
                 bot.send_message(user_id, text, reply_markup=markup)
                 session.get(HERO_SMS_URL, params={"api_key": HERO_SMS_API_KEY, "action": "setStatus", "status": "6", "id": activation_id})
                 
-                # 🔄 GROUP MEIN IS DESIGN SE MESSAGE JAYEGA:
                 try:
                     user_info = bot.get_chat(user_id)
                     u_name = f"@{user_info.username}" if user_info.username else f"User [{user_id}]"
@@ -617,7 +626,14 @@ def run_s2(call):
     uid = call.message.chat.id
     if not check_status(call.from_user.id, uid): return
     bot.answer_callback_query(call.id)
-    _, _, app_code, country_code = call.data.split("_")
+    
+    try:
+        # Fixed alignment split pattern here as well
+        _, _, _, app_code, country_code = call.data.split("_")
+    except Exception as e:
+        logger.error(f"Callback split mismatch error on Server 2: {e}")
+        return
+
     user_id = call.message.chat.id
     req_id = str(int(time.time() * 100))
     
@@ -666,7 +682,7 @@ def admin_submits_s2_number(message, req_id):
     user_text = f"Service = {ord_data['app_name']}\n━━━━━━━━━━━━━━━━━━━━━━\n\n📱 Number\n\n`{num}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n⏳ Waiting for OTP..."
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
-        InlineKeyboardButton("📋 Copy Number", copy_text=CopyTextButton(text=num)), # ✨ Direct Copy Feature
+        InlineKeyboardButton("📋 Copy Number", copy_text=CopyTextButton(text=num)), 
         InlineKeyboardButton("❌ Cancel Number", callback_data=f"cancel_s2_{req_id}")
     )
     bot.edit_message_text(user_text, ord_data["user_id"], ord_data["msg_id"], reply_markup=markup)
@@ -696,7 +712,7 @@ def admin_sends_s2_otp(message, req_id):
     user_text = f"Service = {ord_data['app_name']} \n━━━━━━━━━━━━━━━━━━━━━━\n\n📱 Number\n\n`{ord_data['number']}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔐 OTP\n\n`{otp_val}`"
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
-        InlineKeyboardButton("📋 Copy OTP", copy_text=CopyTextButton(text=otp_val)), # ✨ Direct Copy Feature
+        InlineKeyboardButton("📋 Copy OTP", copy_text=CopyTextButton(text=otp_val)), 
         InlineKeyboardButton("🔄 Get Again OTP", callback_data=f"again_s2_{req_id}")
     )
     bot.send_message(ord_data["user_id"], user_text, reply_markup=markup)
