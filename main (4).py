@@ -171,7 +171,7 @@ def get_typing_area_keyboard():
     return markup
 
 def send_force_join_msg(chat_id):
-    text = "💪🏻 𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐙𝐲𝐫𝐨𝐒𝐌𝐒\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ *Aapne hamara update channel join nahi kiya hai!*\n\nBot use karne ke liye pehle niche click karke join karein aur Verify par click karein.\n\n💬 Telegram = @FynorAdmin\n\n━━━━━━━━━━━━━━━━━━━━━━"
+    text = "💪🏻 𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐙𝐲𝐫𝐨𝐒𝐌𝐒\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ *Aapne hamara update channel join nahi kiya hai!*\n\nBot use karne ke liye pehle niche click karke join karein aur Verify par click karein.\n\n💬 Telegram = @ZyroSMS\n\n━━━━━━━━━━━━━━━━━━━━━━"
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
         InlineKeyboardButton("📢 Join Update Channel", url=UPDATE_CHANNEL_URL),
@@ -210,7 +210,7 @@ def handle_typing_area_buttons(message):
         bot.send_message(uid, f"💬 *Customer Service Contact:*\n\nTelegram: @{SECONDARY_ADMIN_USERNAME}")
 
 def send_main_menu_direct(uid, uname=None):
-    text = "💪🏻 𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐙𝐲𝐫𝐨𝐒𝐌𝐒\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n🤝 𝗔𝗹𝗹 𝗧𝘆𝗽𝗲 𝗢𝗧𝗣 𝗔𝘃𝗮𝗶𝗹𝗮𝗯𝗹𝗲 𝗶𝗻 𝗖𝗵𝗲𝗮𝗽 𝗣𝗿𝗶𝗰𝗲𝘀\n\n💬 Contact Telegram = @FynorAdmin\n\n━━━━━━━━━━━━━━━━━━━━━━\n 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐙𝐲𝐫𝐨𝐒𝐌𝐒 !:"
+    text = "💪🏻 𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐙𝐲𝐫𝐨𝐒𝐌𝐒\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n🤝 𝗔𝗹𝗹 𝗧𝘆𝗽𝗲 𝗢𝗧𝗣 𝗔𝘃𝗮𝗶𝗹𝗮𝗯𝗹𝗲 𝗶𝗻 𝗖𝗵𝗲𝗮𝗽 𝗣𝗿𝗶𝗰𝗲𝘀\n\n💬 Contact Telegram = @ZyroSMS\n\n━━━━━━━━━━━━━━━━━━━━━━\n 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐙𝐲𝐫𝐨𝐒𝐌𝐒 !:"
     
     inline_markup = InlineKeyboardMarkup(row_width=2)
     inline_markup.add(
@@ -240,12 +240,13 @@ def advanced_admin_hub(message):
     uname = message.from_user.username
     if not is_admin(uid, uname): return
     
-    text = "💪🏻 *𝐀𝐝𝐯𝐚𝐧𝐜𝐞 𝐂𝐨𝐧𝐭𝐫𝐨𝐥 *\n━━━━━━━━━━━━━━━━━━━━━━"
+    text = "💪🏻 *𝐀𝐝𝐯𝐚𝐧𝐜𝐞 𝐂𝐨𝐧𝐭𝐫𝐨𝐥 𝐇𝐮𝐛*\n━━━━━━━━━━━━━━━━━━━━━━"
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
         InlineKeyboardButton("Add Balance", callback_data="adm_panel_addbal"),
         InlineKeyboardButton("Remove Balance", callback_data="adm_panel_rembal"),
         InlineKeyboardButton("Bot On/Off", callback_data="adm_panel_togglebot"),
+        InlineKeyboardButton("🙈 Hide Server (S1/S2)", callback_data="adm_panel_hidesrv"), # New Button
         InlineKeyboardButton("Alert Message", callback_data="adm_panel_alert"),
         InlineKeyboardButton("User History", callback_data="adm_panel_uhistory"),
         InlineKeyboardButton("Pay History", callback_data="adm_panel_phistory")
