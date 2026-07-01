@@ -453,7 +453,6 @@ def choose_srv(call):
     _, _, app_code, country_code = call.data.split("_")
     text = "🧘🏻 𝐒𝐞𝐥𝐞𝐜𝐭 𝐒𝐞𝐫𝐯𝐞𝐫 \n━━━━━━━━━━━━━━━━━━━━━━"
     markup = InlineKeyboardMarkup(row_width=2)
-    # Callback data structured safely with srv1/srv2 indicators
     markup.add(
         InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_srv1_{app_code}_{country_code}"),
         InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_srv2_{app_code}_{country_code}")
@@ -463,7 +462,7 @@ def choose_srv(call):
     except Exception: pass
 
 # =====================================================================
-# CHOOSE AND RUN ENGINES (FIXED VARIABLE UNPACKING & STOCK CHECK)
+# RUN SERVER 01 ENGINE (WITH FIXED SPLITTING & FAILURE HANDLERS)
 # =====================================================================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("run_s1_"))
 def run_s1(call):
@@ -472,7 +471,7 @@ def run_s1(call):
     bot.answer_callback_query(call.id)
     
     try:
-        # Handles the aligned 5-part splitting pattern cleanly
+        # Properly unpacks the 5-part pattern safely
         _, _, _, app_code, country_code = call.data.split("_")
     except Exception as e:
         logger.error(f"Callback split mismatch error on Server 1: {e}")
@@ -480,7 +479,7 @@ def run_s1(call):
 
     user_id = call.message.chat.id
     
-    # Aapka custom out-of-stock / error message string (Stylish Fonts Preserved)
+    # Stylish Font Stock Configuration
     error_text = (
         "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
         "_________________________________________\n"
@@ -532,13 +531,18 @@ def run_s1(call):
             )
             bot.edit_message_text(text, user_id, call.message.message_id, reply_markup=markup)
             threading.Thread(target=poll_s1, args=(user_id, call.message.message_id, activation_id, phone_number, app_name, cost)).start()
-        else: 
-            bot.send_message(user_id, error_text)
         
+        # ⚠️ PURANA REAL FLOW: Aggar HeroSMS se response out of stock / empty error aaye
+        elif "NO_NUMBERS" in res_text or "NO_BALANCE" in res_text:
+            bot.send_message(user_id, error_text)
+        else:
+            bot.send_message(user_id, f"❌ System response error status: {res_text}")
+            
     except Exception as e:
-        logger.error(f"API Error: {e}")
+        logger.error(f"API Connection Error: {e}")
         try:
-            bot.send_message(call.message.chat.id, error_text)
+            # 🔄 EXACT PURANI REQUIREMENT: Communication breakdowns par yahi specific line trigger hogi
+            bot.send_message(user_id, "❌ API communication failure occurred.")
         except Exception:
             pass
 
@@ -558,7 +562,7 @@ def poll_s1(user_id, message_id, activation_id, phone_number, app_name, cost):
                     run_query("UPDATE users SET balance = MAX(0.0, balance - ?), total_spent = total_spent + ? WHERE user_id = ?", (cost, cost, user_id))
                 
                 run_query("INSERT INTO history (user_id, service, number, otp, server) VALUES (?, ?, ?, ?, 'Server 1')", (user_id, app_name, phone_number, otp_code))
-                text = f"💪🏻 𝐎𝐓𝐏 𝐑e𝐜𝐞𝐢𝐯e𝐝\n\nService : {app_name}\n━━━━━━━━━━━━━━━━━━━━━━\n🧾 𝐍𝐮𝐦𝐛𝐞𝐫\n\n`+{phone_number}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔐 OTP\n\n`{otp_code}`"
+                text = f"💪🏻 𝐎𝐓𝐏 𝐑e𝐜e𝐢𝐯e𝐝\n\nService : {app_name}\n━━━━━━━━━━━━━━━━━━━━━━\n🧾 𝐍𝐮𝐦𝐛𝐞𝐫\n\n`+{phone_number}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔐 OTP\n\n`{otp_code}`"
                 markup = InlineKeyboardMarkup(row_width=1)
                 markup.add(
                     InlineKeyboardButton("📋 Copy OTP", copy_text=CopyTextButton(text=otp_code)), 
@@ -628,7 +632,7 @@ def run_s2(call):
     bot.answer_callback_query(call.id)
     
     try:
-        # Fixed alignment split pattern here as well
+        # Fixed alignment split pattern here as well to balance execution
         _, _, _, app_code, country_code = call.data.split("_")
     except Exception as e:
         logger.error(f"Callback split mismatch error on Server 2: {e}")
@@ -740,6 +744,7 @@ def again_s2_trigger(call):
     )
     bot.send_message(PRIMARY_ADMIN_ID, adm_text, reply_markup=markup)
     bot.send_message(ord_data["user_id"], "🔄 Get Again Request forwarded to Admin successfully.")
+
 
 # =====================================================================
 # 💳 ADVANCED DYNAMIC USER PAYMENT ENGINE (WORKING FLOW)
