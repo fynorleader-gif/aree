@@ -458,6 +458,9 @@ def choose_srv(call):
     try: bot.edit_message_text(text, uid, call.message.message_id, reply_markup=markup)
     except Exception: pass
 
+# =====================================================================
+# CHOOSE AND RUN ENGINES (REPLACED RUN_S1 FUNCTION)
+# =====================================================================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("run_s1_"))
 def run_s1(call):
     uid = call.message.chat.id
@@ -480,6 +483,17 @@ def run_s1(call):
     api_res = run_query("SELECT api_code, name FROM services WHERE code = ?", (app_code,), is_select=True, fetch_all=False)
     api_service, app_name = api_res[0], api_res[1]
     
+    # Aapka custom out-of-stock / error message string
+    error_text = (
+        "🩷 𝐒𝐨𝐫𝐫𝐲 \n"
+        "_________________________________________\n"
+        "𝗔𝗯𝗵𝗶 𝗶𝘀 𝗦𝗲𝗿𝘃𝗶𝗰𝗲 𝗸𝘆 𝗡𝘂𝗺𝗯𝗲𝗿 𝗸𝗮 𝗦𝘁𝗼𝗰𝗸 𝗞𝗵𝗮𝘁𝘁𝗮𝗺 𝗵𝗼 𝗚𝘆𝗮 𝗵𝗮𝗶  🌶️\n\n"
+        "🔄 𝐓𝐡𝐨𝐫𝐢 𝐃𝐞𝐞𝐫 𝐭𝐚𝐤 𝐇𝐮𝐦 𝐚𝐮𝐫 𝐍𝐮𝐦𝐛𝐞𝐫 𝐚𝐝𝐝 𝐤𝐚𝐫 𝐝𝐞 𝐆𝐚 \n\n"
+        "𝗔𝗻𝘆 𝗜𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @ZyroSMS\n"
+        "__________________________________________\n"
+        "🩷 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐅𝐲𝐧𝐨𝐫 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 !"
+    )
+    
     payload = {"api_key": HERO_SMS_API_KEY, "action": "getNumber", "service": api_service, "country": country_code}
     try:
         response = session.get(HERO_SMS_URL, params=payload, timeout=15)
@@ -495,32 +509,22 @@ def run_s1(call):
             text = f"💪🏻 𝐒𝐞𝐫𝐯𝐞𝐫 𝟏 \n\nService = {app_name}\n━━━━━━━━━━━━━━━━━━━━━━\n🧾 𝐍𝐮𝐦𝐛𝐞𝐫 \n\n`+{phone_number}`\n\n━━━━━━━━━━━━━━━━━━━━━━\n⏳ 𝐖𝐚𝐢𝐭𝐢𝐧𝐠 𝐟𝐨𝐫 𝐎𝐓𝐏..."
             markup = InlineKeyboardMarkup(row_width=1)
             markup.add(
-                InlineKeyboardButton("📋 Copy Number", copy_text=CopyTextButton(text=f"+{phone_number}")), # ✨ Direct Copy Feature
+                InlineKeyboardButton("📋 Copy Number", copy_text=CopyTextButton(text=f"+{phone_number}")), 
                 InlineKeyboardButton("❌ Cancel Number", callback_data=f"cancel_s1_{activation_id}")
             )
             bot.edit_message_text(text, user_id, call.message.message_id, reply_markup=markup)
             threading.Thread(target=poll_s1, args=(user_id, call.message.message_id, activation_id, phone_number, app_name, cost)).start()
-        else: bot.send_message(user_id, f"❌ System response error status: {res_text}")
+        else: 
+            # Agar API response me NO_NUMBERS ya koi aur error code aaye
+            bot.send_message(user_id, error_text)
         
     except Exception as e:
         logger.error(f"API Error: {e}")
-        
-        # ✅ 'except' ko small letters me kar diya hai aur 'call.message.chat.id' lagaya hai
-        error_text = (
-            "🩷 𝐒𝐨𝐫𝐫𝐲\n"
-            "_________________________________________\n"
-            "𝗗𝗼𝘂𝘆𝗶𝗻 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 𝗻𝘂𝗺𝗯𝗲𝗿𝘀 𝗮𝗯𝗵𝗶 𝗮𝘃𝗮𝗶𝗹𝗮𝗯𝗹𝗲 𝗻𝗮𝗵𝗶 𝗵𝗮𝗶𝗻. 🌶️\n\n"
-            "🔄 𝐓𝐡𝐨𝐝𝐢 𝐝𝐞𝐫 𝐛𝐚𝐚𝐝  𝐭𝐫𝐲 𝐤𝐚𝐫𝐞𝐢𝐧\n\n"
-            "𝗔𝗻𝘆 𝗜𝘀𝘀𝘂𝗲 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 = @FynorAdmin\n"
-            "__________________________________________\n"
-            "🩷 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐙𝐲𝐫𝐨𝐒𝐌𝐒 !"
-        )
-        # Agar aapka ye message kisi button click (callback) ke andar hai, toh ye line kaam karegi:
+        # Agar request fail ho jaye (Internet issue ya server down ho)
         try:
             bot.send_message(call.message.chat.id, error_text)
-        except NameError:
-            # Agar ye simple message handler ke andar hai, toh ye line kaam karegi:
-            bot.send_message(message.chat.id, error_text)
+        except Exception:
+            pass
 
 def poll_s1(user_id, message_id, activation_id, phone_number, app_name, cost):
     start_time = time.time()
