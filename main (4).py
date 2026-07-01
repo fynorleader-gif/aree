@@ -462,7 +462,7 @@ def process_admin_edit_price(message, app_code):
         
     cost = float(price_res[0])
 # =====================================================================
-# CHOOSE AND RUN ENGINES
+# CHOOSE AND RUN ENGINES (DYNAMIC HIDDEN SERVER CONTROLLER)
 # =====================================================================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("choose_srv_"))
 def choose_srv(call):
@@ -470,15 +470,34 @@ def choose_srv(call):
     if not check_status(call.from_user.id, uid): return
     bot.answer_callback_query(call.id)
     _, _, app_code, country_code = call.data.split("_")
+    
     text = "🧘🏻 𝐒𝐞𝐥𝐞𝐜𝐭 𝐒𝐞𝐫𝐯𝐞𝐫 \n━━━━━━━━━━━━━━━━━━━━━━"
     markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_srv1_{app_code}_{country_code}"),
-        InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_srv2_{app_code}_{country_code}")
-    )
+    
+    # Check DB if any server is configured to be hidden
+    hidden_cfg = run_query("SELECT value FROM sys_config WHERE key = 'hidden_server'", is_select=True, fetch_all=False)
+    hidden_server = hidden_cfg[0] if hidden_cfg else "0"
+    
+    buttons = []
+    
+    # If the user is Admin, they should see both servers regardless of configuration
+    if is_admin(uid, call.from_user.username):
+        buttons.append(InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_srv1_{app_code}_{country_code}"))
+        buttons.append(InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_srv2_{app_code}_{country_code}"))
+    else:
+        # For regular users, apply the visibility rules dynamically
+        if hidden_server != "1":
+            buttons.append(InlineKeyboardButton("💪🏻 Server No 01", callback_data=f"run_s1_srv1_{app_code}_{country_code}"))
+        if hidden_server != "2":
+            buttons.append(InlineKeyboardButton("🌡️ Server No 02", callback_data=f"run_s2_srv2_{app_code}_{country_code}"))
+            
+    markup.add(*buttons)
     markup.add(InlineKeyboardButton("🔙 Back", callback_data=f"usr_view_app_{app_code}"))
-    try: bot.edit_message_text(text, uid, call.message.message_id, reply_markup=markup)
-    except Exception: pass
+    
+    try: 
+        bot.edit_message_text(text, uid, call.message.message_id, reply_markup=markup)
+    except Exception: 
+        pass
 
 # =====================================================================
 # RUN SERVER 01 ENGINE (WITH FIXED CONNECTION ERROR HANDLER)
