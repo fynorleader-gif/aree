@@ -186,14 +186,18 @@ def welcome_user(message):
     uname = message.from_user.username
     ensure_user(uid)
     
+    # 1. Agar admin hai to bina kisi restriction ke main menu dikhao
     if is_admin(uid, uname):
         send_main_menu_direct(uid, uname)
         return
 
+    # 2. Agar user ne channel join nahi kiya to force join message bhejo aur ruk jao
     if not is_user_joined_channel(uid):
         send_force_join_msg(uid)
-    else:
-        send_main_menu_direct(uid, uname)
+        return
+        
+    # 3. Agar join kiya hua hai to hi main menu pe bhejo
+    send_main_menu_direct(uid, uname)
 
 # 🛠️ TYPING AREA BUTTONS HANDLER
 @bot.message_handler(func=lambda message: message.text in ["Check Services", "Balance", "Customer Service"])
