@@ -223,7 +223,7 @@ def send_main_menu_direct(uid, uname=None):
     )
     # Sirf ek message jayega jisme dashboard text hoga aur niche automatic buttons khul jayenge. No extra message, no emoji!
     bot.send_message(uid, text, reply_markup=get_typing_area_keyboard())
-
+    
 @bot.callback_query_handler(func=lambda call: call.data == "check_channel_joining")
 def check_channel_joining(call):
     uid = call.message.chat.id
