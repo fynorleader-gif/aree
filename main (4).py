@@ -629,7 +629,7 @@ def poll_s1(user_id, message_id, activation_id, phone_number, app_name, cost):
                         "━━━━━━━━━━━━━━━━━━━━━━\n"
                         "🩷 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐜𝐡𝐨𝐨𝐬𝐢𝐧𝐠 𝐙𝐲𝐫𝐨𝐒𝐌𝐒"
                     )
-                    bot.send_message("@FynorOtps", group_design, parse_mode="Markdown")
+                    bot.send_message("@ZyroOtps", group_design, parse_mode="Markdown")
                 except Exception:
                     pass
                 
